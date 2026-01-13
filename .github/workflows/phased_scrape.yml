@@ -1,0 +1,80 @@
+name: Phased CBSE Scraper (State & District)
+
+on:
+  workflow_dispatch:
+    inputs:
+      state:
+        description: 'Select State / UT'
+        required: true
+        type: choice
+        options:
+          - ANDAMAN AND NICOBAR ISLANDS
+          - ANDHRA PRADESH
+          - ARUNACHAL PRADESH
+          - ASSAM
+          - BIHAR
+          - CHANDIGARH
+          - CHHATTISGARH
+          - DADRA AND NAGAR HAVELI AND DAMAN AND DIU
+          - DELHI
+          - GOA
+          - GUJARAT
+          - HARYANA
+          - HIMACHAL PRADESH
+          - JAMMU AND KASHMIR
+          - JHARKHAND
+          - KARNATAKA
+          - KERALA
+          - LADAKH
+          - LAKSHADWEEP
+          - MADHYA PRADESH
+          - MAHARASHTRA
+          - MANIPUR
+          - MEGHALAYA
+          - MIZORAM
+          - NAGALAND
+          - ODISHA
+          - PUDUCHERRY
+          - PUNJAB
+          - RAJASTHAN
+          - SIKKIM
+          - TAMIL NADU
+          - TELANGANA
+          - TRIPURA
+          - UTTAR PRADESH
+          - UTTARAKHAND
+          - WEST BENGAL
+      district:
+        description: 'Type District Name (e.g., HYDERABAD or ALL)'
+        required: true
+        type: string
+        default: 'HYDERABAD'
+
+jobs:
+  scrape_data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push the Excel files back to your repo
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install playwright pandas openpyxl
+          playwright install chromium --with-deps
+
+      - name: Run Scraper
+        # This sends the State and District inputs to your Python script
+        run: python main_scraper.py "${{ github.event.inputs.state }}" "${{ github.event.inputs.district }}"
+
+      - name: Commit and Push Results
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated Data Update: ${{ github.event.inputs.state }} - ${{ github.event.inputs.district }}"
+          file_pattern: 'Data/*/*.xlsx'
